@@ -1,59 +1,53 @@
-package com.example.myapplication;
+package com.example.ceres;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
-import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.tabs.TabLayout;
+
 public class MainActivity extends AppCompatActivity {
+
+
+    private TabLayout tabLayout;
+    private ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Button btLogin = (Button) findViewById(R.id.btLogin);
-        btLogin.setOnClickListener( new View.OnClickListener() {
 
-            @Override
-            public void onClick(View view) {
-                TextView tLogin = (TextView) findViewById(R.id.tLogin); //localizando o login
-                TextView tSenha = (TextView) findViewById(R.id.tSenha); //localizando a senha
-                String login = tLogin.getText().toString(); // armazendando o login em uma variavel
-                String senha = tSenha.getText().toString(); // armazenando a senha em uma variavel
-                if(login.equals("joao")&&senha.equals("lindo")){ //comparando o digitado com o banco de dados
-                    Intent intent = new Intent(MainActivity.this, main_menu.class);
-                    startActivity(intent);
-                }else{
-                    alert("LOGIN INCORRETO");
-                }
-            }
-        });
-        TextView recText = findViewById(R.id.recSenha);
-        SpannableString recuSenha = new SpannableString("Esqueceu sua senha?");// instância de SpannableString, que é uma string que permite a adição de spans
-        ClickableSpan recSenha = new ClickableSpan() { // instância de ClickableSpan e sobrescreva o método onClick()
-            @Override
-            public void onClick(@NonNull View view) {
-                //Toast.makeText(MainActivity.this, "solicitada senha", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(MainActivity.this, forgetPassword.class);
-                startActivity(intent);
-            }
-        };
-        recuSenha.setSpan(recSenha, 0, recuSenha.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); // Adicione o ClickableSpan ao SpannableString usando o método setSpan()
-        recText.setText(recuSenha);
-        recText.setMovementMethod(LinkMovementMethod.getInstance());
+        tabLayout = findViewById(R.id.tablayout);
+        viewPager = findViewById(R.id.viewpager);
+
+        tabLayout.setupWithViewPager(viewPager);
+
+        VPAdapter vpAdapter = new VPAdapter(getSupportFragmentManager(),FragmentPagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+        vpAdapter.addFragment(new principal(), "Principal");
+        vpAdapter.addFragment(new relatorios(),"Relatórios");
+        vpAdapter.addFragment(new dispositivos(),"Dispositivos");
+        viewPager.setAdapter(vpAdapter);
 
     }
 
-    private void alert(String s){
-        Toast.makeText(this,s,Toast.LENGTH_LONG).show();
+    private class dataRequest extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... url) {
+            return espGetData.getData(url[0]);
+        }
+
+        @Override
+        protected void onPostExecute(String result) { //função para tratar dados retornados
+            if (result != null){
+                Toast.makeText(MainActivity.this, result, Toast.LENGTH_LONG).show(); // toast na main activity layout mostrando o dado obtido
+            }else{
+                Toast.makeText(MainActivity.this, "Falha na requisição de dados", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }
